@@ -7,6 +7,7 @@ import ToggleMode from './ToggleMode';
 import Search from './Search';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/shared/Logo';
+import { Show, SignUpButton, UserButton } from '@clerk/nextjs';
 
 export default function Navbar() {
 
@@ -15,7 +16,7 @@ export default function Navbar() {
     const navLinkBase = "relative px-1 mx-2 bg-transparent font-bold tracking-wider transition-colors duration-200 ease-in-out py-1";
 
     const activeStyles = "bg-gradient-to-r from-blue-600 to-sky-500 dark:from-blue-400 dark:to-sky-300 bg-clip-text text-transparent after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-gradient-to-r after:from-blue-600 after:to-sky-500 dark:after:from-blue-400 dark:after:to-sky-300";
-    
+
     const notActiveStyles = "text-slate-600 dark:text-slate-200 hover:text-blue-600 dark:hover:text-white after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-0 hover:after:w-full after:bg-blue-600 dark:after:bg-blue-400 after:transition-all after:duration-200";
 
     type NavItem = {
@@ -76,7 +77,18 @@ export default function Navbar() {
 
             <div className="navbar-end gap-2">
                 <ToggleMode />
-                <Button>Sign Up</Button>
+
+                {/* User Actions  */}
+
+                <Show when="signed-in">
+                    <UserButton />
+                </Show>
+                <Show when="signed-out">
+                    <SignUpButton mode="modal">
+                        <Button>Sign Up</Button>
+                    </SignUpButton>
+                </Show>
+
             </div>
         </div>
     )
