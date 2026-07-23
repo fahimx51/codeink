@@ -54,7 +54,7 @@ export async function POST(req: Request) {
         try {
             await prisma.user.create({
                 data: {
-                    clarkUserId: user.id,
+                    clerkUserId: user.id,
                     email: user.email_addresses[0]?.email_address ?? "",
                     name: `${user.first_name ?? ""} ${user.last_name ?? ""}`.trim(),
                     imageUrl: user.image_url,
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
         try {
             await prisma.user.update({
                 where: {
-                    clarkUserId: user.id,
+                    clerkUserId: user.id,
                 },
                 data: {
                     email: user.email_addresses[0]?.email_address ?? "",
@@ -98,7 +98,7 @@ export async function POST(req: Request) {
         try {
             await prisma.user.delete({
                 where: {
-                    clarkUserId: evt.data.id,
+                    clerkUserId: evt.data.id,
                 },
             });
             console.log(`User ${evt.data.id} deleted from database.`);
