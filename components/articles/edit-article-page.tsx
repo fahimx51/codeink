@@ -8,14 +8,20 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { createArticles } from "@/actions/create-article";
+import type { Article } from "@/app/generated/prisma/client";
+import Image from "next/image";
+import { editArticle } from "@/actions/edit-article";
 
 const ReactQuill = dynamic(() => import("react-quill-new"), { ssr: false });
 
-export function CreateArticlePage() {
-    const [content, setContent] = useState("");
+type EditArticlePageProps = {
+    article: Article
+}
 
-    const [formState, action, isPending] = useActionState(createArticles, {
+export function EditArticlePage({ article }: EditArticlePageProps) {
+    const [content, setContent] = useState(article.content || "");
+
+    const [formState, action, isPending] = useActionState(editArticle.bind(null, article.id), {
         errors: {},
     });
 
@@ -23,7 +29,7 @@ export function CreateArticlePage() {
         <div className="max-w-4xl mx-auto p-6">
             <Card>
                 <CardHeader>
-                    <CardTitle className="text-2xl">Create New Article</CardTitle>
+                    <CardTitle className="text-2xl">Edit Article</CardTitle>
                 </CardHeader>
                 <CardContent>
                     {/* 1. Pass 'action' directly to the form */}
@@ -42,6 +48,7 @@ export function CreateArticlePage() {
                                 id="title"
                                 name="title"
                                 placeholder="Enter article title"
+                                defaultValue={article.title}
                                 required
                             />
 
@@ -57,6 +64,7 @@ export function CreateArticlePage() {
                             <select
                                 id="category"
                                 name="category"
+                                defaultValue={article.category}
                                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-zinc-950 dark:text-zinc-50 dark:border-zinc-800"
                                 required
                             >
@@ -81,6 +89,15 @@ export function CreateArticlePage() {
                                 type="file"
                                 accept="image/*"
                                 required
+                            />
+
+                            {/* Show the image */}
+                            <Image
+                                src={article.featuredImage}
+                                alt="featured-image"
+                                width={200}
+                                height={200}
+                                className="object-cover"
                             />
 
                             {formState.errors?.featuredImage && (
@@ -127,4 +144,4 @@ export function CreateArticlePage() {
     );
 }
 
-export default CreateArticlePage;
+export default EditArticlePage;
