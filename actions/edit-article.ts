@@ -11,6 +11,7 @@ import { uploadOnCloudinary } from "@/lib/cloudinary";
 const createArticleSchema = z.object({
     title: z.string().min(3).max(100),
     category: z.string().min(3).max(25),
+    status: z.enum(["published", "draft"]),
     content: z.string().min(10),
 });
 
@@ -18,6 +19,7 @@ type EditArticleFormState = {
     errors: {
         title?: string[];
         category?: string[];
+        status?: string[];
         featuredImage?: string[];
         content?: string[];
         formErrors?: string[];
@@ -33,6 +35,7 @@ export const editArticle = async (
     const result = createArticleSchema.safeParse({
         title: formData.get("title"),
         category: formData.get("category"),
+        status: formData.get("status"),
         content: formData.get("content"),
     });
 
@@ -79,7 +82,7 @@ export const editArticle = async (
     const imageFile = formData.get("featuredImage") as File | null;
     let imageUrl = exisingArticle.featuredImage;
 
-    if (imageFile) {
+    if (imageFile && imageFile.size > 0) {
         const arrayBuffer = await imageFile.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
 
@@ -104,6 +107,7 @@ export const editArticle = async (
             data: {
                 title: result.data.title,
                 category: result.data.category,
+                isPublished: result.data.status === "published",
                 content: result.data.content,
                 featuredImage: imageUrl,
             },

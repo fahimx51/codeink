@@ -12,116 +12,108 @@ import {
     TableRow,
 } from "../ui/table";
 import Link from "next/link";
+import { Pencil, Trash2, Loader2, ArrowRight } from "lucide-react";
+import { deleteArticle } from "@/actions/delete-article";
 
 type Article = {
     id: string;
     title: string;
-    status: "Published" | "Draft";
+    isPublished: boolean;
     comments: { id: string }[];
-    createdAt: string;
+    createdAt: Date | string;
 };
 
-const mockArticles: Article[] = [
-    {
-        id: "1",
-        title: "Getting Started with Next.js App Router",
-        status: "Published",
-        comments: [{ id: "c1" }, { id: "c2" }],
-        createdAt: "2026-07-20T10:00:00Z",
-    },
-    {
-        id: "2",
-        title: "Mastering Tailwind CSS and DaisyUI",
-        status: "Published",
-        comments: [{ id: "c3" }],
-        createdAt: "2026-07-18T14:30:00Z",
-    },
-    {
-        id: "3",
-        title: "Building Real-time Webhooks with Clerk",
-        status: "Published",
-        comments: [],
-        createdAt: "2026-07-15T09:15:00Z",
-    },
-    {
-        id: "4",
-        title: "Prisma ORM Best Practices with PostgreSQL",
-        status: "Published",
-        comments: [{ id: "c4" }, { id: "c5" }, { id: "c6" }],
-        createdAt: "2026-07-10T18:00:00Z",
-    },
-];
-
-const deleteArticle = async (articleId: string) => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    console.log(`Deleted article with ID: ${articleId}`);
+type RecentArticlesProps = {
+    articles: Article[];
 };
 
-const RecentArticles = ({ articles = mockArticles }: { articles?: Article[] }) => {
+const RecentArticles = ({ articles }: RecentArticlesProps) => {
     return (
-        <Card className="mb-8 w-full max-w-full overflow-hidden">
-            <CardHeader className="p-4 sm:p-6">
+        <Card className="mb-8 w-full max-w-full overflow-hidden border border-border/60">
+            <CardHeader className="p-4 sm:p-6 bg-muted/20 border-b border-border/40">
                 <div className="flex items-center justify-between gap-2">
-                    <CardTitle className="text-base sm:text-xl">Recent Articles</CardTitle>
+                    <CardTitle className="text-base sm:text-xl font-bold tracking-tight">
+                        Recent Articles
+                    </CardTitle>
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="text-muted-foreground shrink-0 text-xs sm:text-sm px-2 sm:px-3"
+                        className="font-semibold text-muted-foreground hover:text-foreground shrink-0 text-xs sm:text-sm px-3 gap-1.5 transition-colors"
                         nativeButton={false}
                         render={<Link href="/dashboard/articles" />}
                     >
-                        View All →
+                        <span>View All</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
                     </Button>
                 </div>
             </CardHeader>
 
-            {!articles.length ? (
-                <CardContent className="p-4 sm:p-6 text-sm text-muted-foreground">
+            {!articles?.length ? (
+                <CardContent className="p-8 text-center text-sm text-muted-foreground">
                     No articles found.
                 </CardContent>
             ) : (
-                <CardContent className="p-0 sm:p-6 sm:pt-0">
-                    {/* Horizontal scroll container for small screens */}
+                <CardContent className="p-0">
                     <div className="w-full min-w-0 overflow-x-auto">
                         <Table className="w-full text-xs sm:text-sm">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="px-3 sm:px-4">Title</TableHead>
-                                    <TableHead className="px-2 sm:px-4">Status</TableHead>
-                                    <TableHead className="hidden sm:table-cell px-4">Comments</TableHead>
-                                    <TableHead className="hidden md:table-cell px-4">Date</TableHead>
-                                    <TableHead className="text-right sm:text-left px-3 sm:px-4">Actions</TableHead>
+                            <TableHeader className="bg-muted/30">
+                                <TableRow className="hover:bg-transparent border-b border-border/60">
+                                    <TableHead className="px-4 py-3 align-middle text-center font-bold text-foreground uppercase tracking-wider text-[11px] sm:text-xs">
+                                        Title
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 align-middle text-center font-bold text-foreground uppercase tracking-wider text-[11px] sm:text-xs">
+                                        Status
+                                    </TableHead>
+                                    <TableHead className="hidden sm:table-cell px-4 py-3 align-middle text-center font-bold text-foreground uppercase tracking-wider text-[11px] sm:text-xs">
+                                        Comments
+                                    </TableHead>
+                                    <TableHead className="hidden md:table-cell px-4 py-3 align-middle text-center font-bold text-foreground uppercase tracking-wider text-[11px] sm:text-xs">
+                                        Date
+                                    </TableHead>
+                                    <TableHead className="px-4 py-3 align-middle text-center font-bold text-foreground uppercase tracking-wider text-[11px] sm:text-xs">
+                                        Actions
+                                    </TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {articles.slice(0, 5).map((article) => (
-                                    <TableRow key={article.id}>
-                                        <TableCell className="font-medium px-3 sm:px-4 max-w-[120px] xs:max-w-[180px] sm:max-w-none truncate">
+                                    <TableRow key={article.id} className="transition-colors hover:bg-muted/40 border-b border-border/40">
+                                        <TableCell className="font-semibold px-4 py-3.5 align-middle text-center max-w-[140px] xs:max-w-[200px] sm:max-w-none truncate">
                                             {article.title}
                                         </TableCell>
-                                        <TableCell className="px-2 sm:px-4">
-                                            <span className="inline-block px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300">
-                                                {article.status}
+                                        <TableCell className="px-4 py-3.5 align-middle text-center">
+                                            <span
+                                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold border ${article.isPublished
+                                                        ? "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20"
+                                                        : "bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 border-amber-500/20"
+                                                    }`}
+                                            >
+                                                {article.isPublished ? "Published" : "Draft"}
                                             </span>
                                         </TableCell>
-                                        <TableCell className="hidden sm:table-cell px-4">
+                                        <TableCell className="hidden sm:table-cell px-4 py-3.5 align-middle text-center font-medium text-muted-foreground">
                                             {article.comments.length}
                                         </TableCell>
-                                        <TableCell className="hidden md:table-cell text-xs sm:text-sm px-4">
-                                            {new Date(article.createdAt).toDateString()}
+                                        <TableCell className="hidden md:table-cell text-xs sm:text-sm px-4 py-3.5 align-middle text-center text-muted-foreground font-medium">
+                                            {new Date(article.createdAt).toLocaleDateString("en-US", {
+                                                month: "short",
+                                                day: "numeric",
+                                                year: "numeric"
+                                            })}
                                         </TableCell>
-                                        <TableCell className="px-3 sm:px-4">
-                                            <div className="flex items-center justify-end sm:justify-start gap-1 sm:gap-2">
+                                        <TableCell className="px-4 py-3.5 align-middle text-center">
+                                            <div className="flex items-center justify-center gap-2">
                                                 <Button
-                                                    variant="ghost"
+                                                    variant="outline"
                                                     size="sm"
-                                                    className="h-8 px-2 text-xs sm:text-sm"
+                                                    className="h-8 px-2.5 font-semibold text-xs border-border/80 shadow-2xs hover:bg-muted hover:text-foreground transition-all gap-1.5"
                                                     nativeButton={false}
                                                     render={
                                                         <Link href={`/dashboard/articles/${article.id}/edit`} />
                                                     }
                                                 >
-                                                    Edit
+                                                    <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                                                    <span>Edit</span>
                                                 </Button>
                                                 <DeleteButton articleId={article.id} />
                                             </div>
@@ -143,26 +135,36 @@ type DeleteButtonProps = {
     articleId: string;
 };
 
-const DeleteButton: React.FC<DeleteButtonProps> = ({ articleId }) => {
+const DeleteButton = ({ articleId }: DeleteButtonProps) => {
     const [isPending, startTransition] = useTransition();
 
     return (
         <form
-            onSubmit={(e) => {
-                e.preventDefault();
+            action={() => {
                 startTransition(async () => {
                     await deleteArticle(articleId);
                 });
             }}
+            className="inline-flex items-center"
         >
             <Button
                 disabled={isPending}
-                variant="ghost"
+                variant="destructive"
                 size="sm"
                 type="submit"
-                className="h-8 px-2 text-xs sm:text-sm"
+                className="h-8 w-[92px] justify-center font-semibold text-xs shadow-2xs shrink-0 gap-1.5 transition-all"
             >
-                {isPending ? "Deleting..." : "Delete"}
+                {isPending ? (
+                    <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Deleting</span>
+                    </>
+                ) : (
+                    <>
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete</span>
+                    </>
+                )}
             </Button>
         </form>
     );

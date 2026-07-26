@@ -3,8 +3,29 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import RecentArticles from "./RecentArticle";
+import { prisma } from "@/lib/prisma";
 
 export async function BlogDashboard() {
+    const [articles, totalComments] = await Promise.all([
+        prisma.article.findMany({
+            orderBy: {
+                createdAt: "desc",
+            },
+            include: {
+                comments: true,
+                author: {
+                    select: {
+                        name: true,
+                        email: true,
+                        imageUrl: true,
+                    },
+                },
+            },
+        }),
+        prisma.comment.count(),
+    ]);
+
+    
     return (
         <main className="flex-1 min-w-0 w-full p-4 sm:p-6 md:p-8">
             {/* Header Section */}
@@ -77,7 +98,7 @@ export async function BlogDashboard() {
             </div>
 
             {/* Recent Articles */}
-            <RecentArticles />
+            <RecentArticles articles={articles} />
         </main>
     );
 }

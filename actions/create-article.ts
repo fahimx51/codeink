@@ -11,6 +11,7 @@ import { uploadOnCloudinary } from "@/lib/cloudinary";
 const createArticleSchema = z.object({
     title: z.string().min(3).max(100),
     category: z.string().min(3).max(50),
+    status: z.enum(["published", "draft"]),
     content: z.string().min(10),
 });
 
@@ -21,6 +22,7 @@ type CreateArticleFormState = {
         featuredImage?: string[];
         content?: string[];
         formErrors?: string[];
+        status?: string[];
     };
 };
 
@@ -29,9 +31,11 @@ export const createArticles = async (
     formData: FormData
 ): Promise<CreateArticleFormState> => {
 
+
     const result = createArticleSchema.safeParse({
         title: formData.get("title"),
         category: formData.get("category"),
+        status: formData.get("status"),
         content: formData.get("content"),
     });
 
@@ -95,6 +99,7 @@ export const createArticles = async (
                 title: result.data.title,
                 category: result.data.category,
                 content: result.data.content,
+                isPublished: result.data.status === "published",
                 featuredImage: imageUrl,
                 authorId: existingUser.id,
             },

@@ -1,5 +1,6 @@
 import EditArticlePage from '@/components/articles/edit-article-page'
 import { prisma } from '@/lib/prisma';
+import { notFound } from 'next/navigation';
 
 async function page({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -9,7 +10,7 @@ async function page({ params }: { params: Promise<{ id: string }> }) {
     });
 
     if (!article) {
-        return <h1> Article not found with this id =  {id} </h1>
+        notFound();
     }
 
     return (
