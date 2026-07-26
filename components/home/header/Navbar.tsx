@@ -36,7 +36,7 @@ export default function Navbar() {
     }
 
     return (
-        <div className="navbar bg-white dark:bg-neutral-900 border-b border-gray-200 dark:border-neutral-800 transition-colors duration-200">
+        <div className="sticky top-0 z-50 navbar bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md border-b border-blue-500/15 transition-colors duration-200">
             <div className="navbar-start">
                 <div className="dropdown">
                     <div tabIndex={0} role="button" className="btn btn-ghost text-gray-700 dark:text-gray-200 lg:hidden">
@@ -44,7 +44,7 @@ export default function Navbar() {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h8m-8 6h16" />
                         </svg>
                     </div>
-                    <ul className="menu menu-sm dropdown-content bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-200 rounded-box z-1 mt-3 w-52 p-2 shadow border border-gray-200 dark:border-neutral-800">
+                    <ul className="menu menu-sm dropdown-content bg-white dark:bg-neutral-900 text-gray-700 dark:text-gray-200 rounded-box z-1 mt-3 w-52 p-2 shadow border border-blue-500/15">
                         {
                             links.map(({ href, label }) => (
                                 <li key={href}>
@@ -56,9 +56,9 @@ export default function Navbar() {
                         }
                     </ul>
                 </div>
-                <a className="btn btn-ghost text-xl text-gray-900 dark:text-white">
+                <Link href="/" className="btn btn-ghost text-xl text-gray-900 dark:text-white">
                     <Logo />
-                </a>
+                </Link>
             </div>
 
             <div className="navbar-center hidden lg:flex">
@@ -85,7 +85,9 @@ export default function Navbar() {
                 </Show>
                 <Show when="signed-out">
                     <SignUpButton mode="modal">
-                        <Button>Sign Up</Button>
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-500/20 dark:bg-blue-500 dark:hover:bg-blue-600">
+                            Sign Up
+                        </Button>
                     </SignUpButton>
                 </Show>
 
