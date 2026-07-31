@@ -56,7 +56,7 @@ export default function Navbar() {
                         }
                     </ul>
                 </div>
-                <Link href="/" className="btn btn-ghost text-xl text-gray-900 dark:text-white">
+                <Link href="/" className=" md:mx-2 text-xl text-gray-900 dark:text-white">
                     <Logo />
                 </Link>
             </div>

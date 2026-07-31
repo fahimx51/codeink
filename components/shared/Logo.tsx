@@ -1,9 +1,9 @@
 import React from 'react';
 
-function Logo({ className = '' }) {
+function Logo() {
     return (
         <div
-            className={`inline-flex items-center font-bold tracking-tight select-none ${className}`}
+            className={`inline-flex items-center font-bold tracking-tight select-none hover:cursor-pointer`}
         >
             {/* Brand Text with Responsive Font Sizes */}
             <span className="text-xl sm:text-2xl md:text-3xl text-slate-900 dark:text-slate-100 transition-colors duration-300">
