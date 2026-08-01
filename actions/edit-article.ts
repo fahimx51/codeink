@@ -7,6 +7,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from '../lib/prisma';
 import { uploadOnCloudinary } from "@/lib/cloudinary";
+import { redis } from "@/lib/redis";
 
 const createArticleSchema = z.object({
     title: z.string().min(3).max(100),
@@ -78,6 +79,8 @@ export const editArticle = async (
             },
         };
     }
+
+    await redis.del(`article:${articleId}`); // Invalidate cache for the article
 
     const imageFile = formData.get("featuredImage") as File | null;
     let imageUrl = exisingArticle.featuredImage;

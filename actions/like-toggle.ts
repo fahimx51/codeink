@@ -8,8 +8,6 @@ export async function toggleLike(articleId: string) {
     const { userId } = await auth(); // Clerk's user ID
     if (!userId) throw new Error("You must be logged in to like an article");
 
-
-
     // Ensure the user exists in the database
     const user = await prisma.user.findUnique({
         where: { clerkUserId: userId },
@@ -21,7 +19,7 @@ export async function toggleLike(articleId: string) {
 
     // Check if the user has already liked the article
     const existingLike = await prisma.like.findFirst({
-        where: { articleId, userId: user.id }, // Use `user.id`, not `clerkUserId`
+        where: { articleId, userId: user.id },
     });
 
     if (existingLike) {
@@ -36,6 +34,5 @@ export async function toggleLike(articleId: string) {
         });
     }
 
-    // Return updated like count
-    revalidatePath(`/article/${articleId}`)
+    revalidatePath(`/articles/${articleId}`);
 }

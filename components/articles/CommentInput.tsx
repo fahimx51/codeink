@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useActionState, useState, useEffect } from 'react';
+import React, { useActionState, useState, useEffect, useRef } from 'react';
 import { Send, User as UserIcon, Loader2, AlertCircle } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { createComments } from '@/actions/create-comment';
@@ -12,6 +12,7 @@ type CommentInputProps = {
 export default function CommentInput({ articleId }: CommentInputProps) {
     const { user, isLoaded } = useUser();
     const [comment, setComment] = useState('');
+    const isSubmittedRef = useRef(false); // Track if user submitted the form
 
     const maxLength = 500;
 
@@ -20,17 +21,26 @@ export default function CommentInput({ articleId }: CommentInputProps) {
         { errors: {} }
     );
 
-    // Reset textarea after successful comment creation
+    // Form submit handler to set submission flag
+    const handleSubmit = (formData: FormData) => {
+        isSubmittedRef.current = true;
+        action(formData);
+    };
+
+    // Reset textarea ONLY after an active submission succeeds
     useEffect(() => {
-        if (!isPending && !formState.errors.body && !formState.errors.formErrors) {
-            setComment('');
+        if (isSubmittedRef.current && !isPending) {
+            if (!formState.errors?.body && !formState.errors?.formErrors) {
+                setComment('');
+            }
+            isSubmittedRef.current = false; 
         }
     }, [isPending, formState]);
 
     const isLimitReached = comment.length >= maxLength;
 
     return (
-        <form action={action} className="w-full">
+        <form action={handleSubmit} className="w-full">
             <div className="flex gap-3 sm:gap-4 items-start">
                 {/* User Avatar */}
                 <div className="flex-shrink-0 mt-1">

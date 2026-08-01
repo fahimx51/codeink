@@ -12,7 +12,8 @@ import {
     User,
     Sparkles,
     Check,
-    MessageSquare
+    MessageSquare,
+    Eye
 } from 'lucide-react';
 
 // Import Quill theme styles
@@ -32,7 +33,9 @@ export type ArticleWithAuthor = Prisma.ArticleGetPayload<{
             };
         };
     };
-}>;
+}> & {
+    views?: number;
+};
 
 export type CommentWithAuthor = Prisma.CommentGetPayload<{
     include: {
@@ -53,6 +56,14 @@ type ArticleDetailsPageProps = {
     isLiked: boolean;
 };
 
+// Helper to estimate read time from HTML content
+function calculateReadTime(htmlContent?: string): number {
+    if (!htmlContent) return 1;
+    const plainText = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const wordCount = plainText ? plainText.split(/\s+/).length : 0;
+    return Math.max(1, Math.ceil(wordCount / 200));
+}
+
 export default function ArticleDetailsPage({
     article,
     comments,
@@ -62,10 +73,16 @@ export default function ArticleDetailsPage({
 
     const [copied, setCopied] = React.useState(false);
 
+    // Dynamic views count fallback
+    const viewsCount = article.views ?? 0;
+
+    // Calculate dynamic read time
+    const readTime = calculateReadTime(article.content);
+
     // Format created date
     const formattedDate = article.createdAt
         ? new Date(article.createdAt).toLocaleDateString('en-US', {
-            month: 'long',
+            month: 'short',
             day: 'numeric',
             year: 'numeric',
         })
@@ -84,77 +101,85 @@ export default function ArticleDetailsPage({
         <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
             {/* Top Bar Navigation */}
             <div className="sticky top-0 z-40 w-full border-b border-border/40 bg-background/80 backdrop-blur-md">
-                <div className="container mx-auto flex h-14 sm:h-16 max-w-5xl items-center justify-between px-3 sm:px-6">
+                <div className="container mx-auto flex h-14 sm:h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
                     <Link
                         href="/articles"
-                        className="inline-flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        className="inline-flex items-center gap-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                     >
-                        <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                        Back to Articles
+                        <ArrowLeft className="h-4 w-4" />
+                        <span>Back to Articles</span>
                     </Link>
 
                     <button
                         onClick={handleShare}
-                        className="inline-flex items-center gap-1 sm:gap-1.5 rounded-lg border border-blue-500/20 bg-blue-500/10 px-2.5 py-1 sm:px-3 sm:py-1.5 text-[11px] sm:text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:bg-blue-500/20 transition-all cursor-pointer"
                     >
-                        {copied ? <Check className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <Share2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
+                        {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Share2 className="h-3.5 w-3.5" />}
                         {copied ? 'Copied!' : 'Share'}
                     </button>
                 </div>
             </div>
 
             {/* Article Main Container */}
-            <main className="container mx-auto max-w-4xl px-3 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-16">
-                <article className="space-y-5 sm:space-y-8">
+            <main className="container mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-6 sm:py-10 lg:py-14">
+                <article className="space-y-6 sm:space-y-10">
+
                     {/* Header Section */}
-                    <header className="space-y-3 sm:space-y-6">
+                    <header className="space-y-4 sm:space-y-6">
                         {/* Category Badge */}
                         {article.category && (
-                            <span className="inline-flex items-center gap-1 sm:gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-0.5 sm:px-3 sm:py-1 text-[10px] sm:text-xs font-semibold text-blue-600 dark:text-blue-400">
-                                <Sparkles className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                                {article.category}
-                            </span>
+                            <div className="flex items-center">
+                                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400 backdrop-blur-sm">
+                                    {article.category}
+                                </span>
+                            </div>
                         )}
 
                         {/* Title */}
-                        <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-snug sm:leading-tight">
+                        <h1 className="text-2xl sm:text-4xl md:text-5xl font-extrabold tracking-tight leading-tight sm:leading-tight text-foreground">
                             {article.title}
                         </h1>
 
-                        {/* Author & Meta Row */}
-                        <div className="flex flex-col xs:flex-row xs:items-center justify-between gap-3 sm:gap-4 pt-3 sm:pt-4 border-y border-border/50 py-3 sm:py-4">
+                        {/* Author & Meta Info Box */}
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-2xl border border-blue-500/10 dark:border-blue-500/15 bg-card/60 p-4 sm:p-5 backdrop-blur-sm shadow-sm">
                             {/* Author Info */}
-                            <div className="flex items-center gap-2.5 sm:gap-3">
+                            <div className="flex items-center gap-3">
                                 {article.author?.imageUrl ? (
                                     <img
                                         src={article.author.imageUrl}
                                         alt={article.author.name || 'Author'}
-                                        className="h-8 w-8 sm:h-11 sm:w-11 rounded-full object-cover border border-blue-500/20"
+                                        className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover ring-2 ring-blue-500/20 border border-border"
                                     />
                                 ) : (
-                                    <div className="flex h-8 w-8 sm:h-11 sm:w-11 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">
-                                        <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                                    <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold border border-blue-500/20">
+                                        <User className="h-5 w-5" />
                                     </div>
                                 )}
                                 <div className="min-w-0">
-                                    <p className="text-xs sm:text-sm font-semibold text-foreground truncate">
+                                    <p className="text-sm font-bold text-foreground truncate">
                                         {article.author?.name || 'Anonymous'}
                                     </p>
-                                    <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                                    <p className="text-xs text-muted-foreground truncate">
                                         {article.author?.email}
                                     </p>
                                 </div>
                             </div>
 
-                            {/* Date & Reading Time */}
-                            <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs md:text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                    <Calendar className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
+                            {/* Date, Read Time & Views Count */}
+                            <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-muted-foreground font-medium pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
+                                <div className="flex items-center gap-1.5" title="Published Date">
+                                    <Calendar className="h-4 w-4 text-blue-500" />
                                     <span>{formattedDate}</span>
                                 </div>
-                                <div className="flex items-center gap-1">
-                                    <Clock className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
-                                    <span>5 min read</span>
+                                <span className="h-1 w-1 rounded-full bg-muted-foreground/40 hidden xs:inline-block" />
+                                <div className="flex items-center gap-1.5" title="Estimated Reading Time">
+                                    <Clock className="h-4 w-4 text-blue-500" />
+                                    <span>{readTime} min read</span>
+                                </div>
+                                <span className="h-1 w-1 rounded-full bg-muted-foreground/40 hidden xs:inline-block" />
+                                <div className="flex items-center gap-1.5 text-foreground/80 font-semibold" title="Total Views">
+                                    <Eye className="h-4 w-4 text-blue-500" />
+                                    <span>{viewsCount.toLocaleString()} views</span>
                                 </div>
                             </div>
                         </div>
@@ -162,7 +187,7 @@ export default function ArticleDetailsPage({
 
                     {/* Featured Image Section */}
                     {article.featuredImage && (
-                        <div className="relative w-full h-[200px] xs:h-[260px] sm:h-[380px] md:h-[450px] overflow-hidden rounded-xl sm:rounded-2xl border border-blue-500/15 shadow-sm">
+                        <div className="relative w-full h-[220px] xs:h-[280px] sm:h-[400px] md:h-[480px] overflow-hidden rounded-2xl border border-blue-500/15 shadow-md bg-muted">
                             <img
                                 src={article.featuredImage}
                                 alt={article.title}
@@ -176,20 +201,20 @@ export default function ArticleDetailsPage({
                         {article.content ? (
                             <div className="ql-container ql-snow !border-0">
                                 <div
-                                    className="ql-editor !p-0 prose prose-blue dark:prose-invert max-w-none text-foreground/90 text-sm sm:text-base md:text-lg leading-relaxed"
+                                    className="ql-editor !p-0 prose prose-blue dark:prose-invert max-w-none text-foreground/90 text-base sm:text-lg leading-relaxed sm:leading-relaxed"
                                     dangerouslySetInnerHTML={{ __html: article.content }}
                                 />
                             </div>
                         ) : (
-                            <p className="text-muted-foreground italic text-sm sm:text-base">No content available.</p>
+                            <p className="text-muted-foreground italic text-base">No content available.</p>
                         )}
                     </div>
 
                     {/* Action Bar & Comments Footer */}
-                    <footer className="pt-6 sm:pt-10 border-t border-border/50 space-y-10">
-                        {/* Article Actions */}
-                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 rounded-xl border border-blue-500/15 bg-blue-500/5 p-3 sm:p-4">
-                            <div className="flex items-center justify-stretch gap-2 sm:gap-3">
+                    <footer className="pt-8 border-t border-border/60 space-y-10">
+                        {/* Article Actions Container */}
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 rounded-2xl border border-blue-500/15 bg-blue-500/5 dark:bg-neutral-900/40 p-4 sm:p-5 backdrop-blur-md">
+                            <div className="flex items-center gap-2 sm:gap-3">
                                 {/* Interactive Like Button */}
                                 <LikeBtn
                                     articleId={article.id}
@@ -197,31 +222,31 @@ export default function ArticleDetailsPage({
                                     isLiked={isLiked}
                                 />
 
-                                <button className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-background px-3.5 py-2 text-xs sm:text-sm font-medium hover:bg-accent transition-colors">
-                                    <Bookmark className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-blue-500" />
-                                    <span>Save</span>
+                                <button className="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-xl border border-border/60 bg-background/80 px-4 py-2.5 text-xs sm:text-sm font-medium hover:bg-accent transition-colors cursor-pointer">
+                                    <Bookmark className="h-4 w-4 text-blue-500" />
+                                    <span>Bookmark</span>
                                 </button>
                             </div>
 
                             <button
                                 onClick={handleShare}
-                                className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 sm:gap-2 rounded-lg bg-blue-600 px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 transition-colors"
+                                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white transition-all cursor-pointer shadow-md shadow-blue-500/20"
                             >
-                                <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                                {copied ? 'Link Copied!' : 'Share Article'}
+                                {copied ? <Check className="h-4 w-4" /> : <Share2 className="h-4 w-4" />}
+                                <span>{copied ? 'Link Copied!' : 'Share Article'}</span>
                             </button>
                         </div>
 
                         {/* Comments Section */}
                         <section className="space-y-6 pt-2">
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2.5 border-b border-border/40 pb-3">
                                 <MessageSquare className="h-5 w-5 text-blue-500" />
-                                <h2 className="text-lg sm:text-xl font-bold">
+                                <h2 className="text-xl sm:text-2xl font-bold text-foreground">
                                     Comments ({comments?.length || 0})
                                 </h2>
                             </div>
 
-                            {/* Comment Box */}
+                            {/* Comment Input */}
                             <CommentInput articleId={article.id} />
 
                             {/* Comment List */}

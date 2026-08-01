@@ -1,12 +1,13 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Calendar, Clock, Heart, MessageSquare, ArrowUpRight } from "lucide-react";
+import { Calendar, Clock, Heart, MessageSquare, ArrowUpRight, Eye } from "lucide-react";
 
 export type Article = {
     id: string;
     title: string;
     content: string;
     category: string;
+    views: number;
     featuredImage: string;
     createdAt: Date | string;
     author: {
@@ -59,6 +60,9 @@ export default function ArticleCard({ article }: ArticleCardProps) {
     const wordCount = plainTextContent ? plainTextContent.split(/\s+/).length : 0;
     const readTime = Math.max(1, Math.ceil(wordCount / 200));
 
+    // Fallback for views count
+    const viewsCount = article.views ?? 0;
+
     return (
         <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-blue-500/10 dark:border-blue-500/15 bg-card/80 text-card-foreground backdrop-blur-sm shadow-sm transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-500/40 hover:shadow-[0_10px_30px_rgba(37,99,235,0.12)] dark:hover:shadow-[0_10px_35px_rgba(59,130,246,0.18)]">
 
@@ -95,8 +99,8 @@ export default function ArticleCard({ article }: ArticleCardProps) {
             <div className="flex flex-1 flex-col justify-between p-5 sm:p-6">
                 <div className="space-y-3">
 
-                    {/* Meta: Date & Read Time */}
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
+                    {/* Meta: Date, Read Time & Views */}
+                    <div className="flex items-center gap-2.5 text-xs text-muted-foreground font-medium flex-wrap">
                         <div className="flex items-center gap-1.5">
                             <Calendar className="h-3.5 w-3.5 text-blue-500" />
                             <time>{formattedDate}</time>
@@ -143,16 +147,25 @@ export default function ArticleCard({ article }: ArticleCardProps) {
                         <span className="font-medium text-foreground/90 text-sm">{article.author.name}</span>
                     </div>
 
-                    {/* Likes & Comments Count */}
-                    <div className="flex items-center gap-3.5 z-20 font-medium">
+                    {/* Views, Likes & Comments Count */}
+                    <div className="flex items-center gap-3 z-20 font-medium">
+                        {/* Views */}
+                        <div className="flex items-center gap-1 transition-colors hover:text-blue-500" title="Total Views">
+                            <Eye className="h-3.5 w-3.5 text-muted-foreground/80 group-hover:text-blue-400 transition-colors" />
+                            <span>{viewsCount}</span>
+                        </div>
+
+                        {/* Likes */}
                         {article._count?.likes !== undefined && (
-                            <div className="flex items-center gap-1 transition-colors hover:text-red-500">
+                            <div className="flex items-center gap-1 transition-colors hover:text-red-500" title="Likes">
                                 <Heart className="h-3.5 w-3.5 text-muted-foreground/80 group-hover:text-red-400 transition-colors" />
                                 <span>{article._count.likes}</span>
                             </div>
                         )}
+
+                        {/* Comments */}
                         {article._count?.comments !== undefined && (
-                            <div className="flex items-center gap-1 transition-colors hover:text-blue-500">
+                            <div className="flex items-center gap-1 transition-colors hover:text-blue-500" title="Comments">
                                 <MessageSquare className="h-3.5 w-3.5 text-muted-foreground/80 group-hover:text-blue-400 transition-colors" />
                                 <span>{article._count.comments}</span>
                             </div>
