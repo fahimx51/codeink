@@ -8,15 +8,27 @@ import React from 'react';
 
 const PAGE_SIZE = 6;
 
-async function getPaginatedArticles(page: number) {
+async function getPaginatedArticles(page: number, search: string) {
     try {
         const skip = (page - 1) * PAGE_SIZE;
+
+        // Build Prisma dynamic filter condition
+        const whereCondition = search
+            ? {
+                OR: [
+                    { title: { contains: search, mode: 'insensitive' as const } },
+                    { category: { contains: search, mode: 'insensitive' as const } },
+                    { content: { contains: search, mode: 'insensitive' as const } },
+                ],
+            }
+            : {};
 
         // Run query and total count in parallel using a transaction
         const [articles, totalArticles] = await prisma.$transaction([
             prisma.article.findMany({
-                take: PAGE_SIZE, // LIMIT
-                skip: skip,      // OFFSET
+                where: whereCondition,
+                take: PAGE_SIZE,
+                skip: skip,
                 orderBy: {
                     createdAt: 'desc',
                 },
@@ -35,7 +47,7 @@ async function getPaginatedArticles(page: number) {
                     },
                 },
             }),
-            prisma.article.count(), // Needed to calculate total pages
+            prisma.article.count({ where: whereCondition }),
         ]);
 
         const totalPages = Math.ceil(totalArticles / PAGE_SIZE) || 1;
@@ -48,16 +60,16 @@ async function getPaginatedArticles(page: number) {
 }
 
 interface PageProps {
-    searchParams: Promise<{ page?: string }>;
+    searchParams: Promise<{ page?: string; search?: string }>;
 }
 
 export default async function ArticlePage({ searchParams }: PageProps) {
-    // Read page number from URL query params (e.g. /articles?page=2)
     const resolvedParams = await searchParams;
     const currentPage = Math.max(1, Number(resolvedParams.page) || 1);
+    const searchQuery = resolvedParams.search || '';
 
-    // Fetch ONLY 6 articles for the current page
-    const { articles, totalPages } = await getPaginatedArticles(currentPage);
+    // Fetch filtered and paginated articles
+    const { articles, totalPages } = await getPaginatedArticles(currentPage, searchQuery);
 
     return (
         <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">

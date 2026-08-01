@@ -1,35 +1,58 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, X, Sparkles } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 interface ArticleSearchInputProps {
-    onSearch?: (query: string) => void;
     placeholder?: string;
 }
 
 export default function ArticleSearchInput({
-    onSearch,
     placeholder = "Search articles by title, tag, or topic...",
 }: ArticleSearchInputProps) {
-    const [query, setQuery] = useState("");
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
+    const router = useRouter();
 
-    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = e.target.value;
-        setQuery(val);
-        if (onSearch) onSearch(val);
+    // 1. Get initial value from URL search param directly
+    const currentSearch = searchParams.get("search") || "";
+    const [query, setQuery] = useState(currentSearch);
+
+    // 2. Helper to update URL search parameter
+    const updateSearchQuery = (term: string) => {
+        const params = new URLSearchParams(searchParams.toString());
+        
+        if (term.trim()) {
+            params.set("search", term.trim());
+        } else {
+            params.delete("search");
+        }
+        
+        // Reset to page 1 on new search
+        params.set("page", "1");
+
+        router.push(`${pathname}?${params.toString()}`);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setQuery(e.target.value);
     };
 
     const handleClear = () => {
         setQuery("");
-        if (onSearch) onSearch("");
+        updateSearchQuery("");
+    };
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        updateSearchQuery(query);
     };
 
     return (
-        <div className="relative w-full max-w-2xl mx-auto">
-            {/* Soft Ambient Glow Effect on Focus/Hover */}
+        <form onSubmit={handleSubmit} className="relative w-full max-w-2xl mx-auto">
+            {/* Soft Ambient Glow Effect */}
             <div className="absolute -inset-0.5 rounded-full bg-gradient-to-r from-blue-600 to-sky-400 opacity-20 blur-md transition duration-300 group-hover:opacity-40" />
 
             {/* Input Container Card */}
@@ -44,12 +67,12 @@ export default function ArticleSearchInput({
                 <input
                     type="text"
                     value={query}
-                    onChange={handleSearch}
+                    onChange={handleInputChange}
                     placeholder={placeholder}
                     className="w-full bg-transparent px-3 py-3.5 text-sm sm:text-base text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
                 />
 
-                {/* Right Action Items (Clear Button) */}
+                {/* Right Action Items */}
                 <div className="pr-3 flex items-center gap-2">
                     {query && (
                         <button
@@ -64,7 +87,7 @@ export default function ArticleSearchInput({
 
                     {/* Search Submit Button */}
                     <Button
-                        type="button"
+                        type="submit"
                         size="sm"
                         className="rounded-full bg-blue-600 cursor-pointer hover:bg-blue-700 text-white px-4 h-9 shadow-md shadow-blue-500/20 dark:bg-blue-500 dark:hover:bg-blue-600 transition-all"
                     >
@@ -73,6 +96,6 @@ export default function ArticleSearchInput({
                 </div>
 
             </div>
-        </div>
+        </form>
     );
 }

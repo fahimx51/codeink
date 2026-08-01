@@ -3,7 +3,7 @@
 import React, { useTransition } from 'react';
 import ArticleCard, { Article } from '@/components/articles/ArticleCard';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 interface ArticlesGridProps {
     articles: Article[];
@@ -13,29 +13,30 @@ interface ArticlesGridProps {
 
 export default function ArticlesGrid({ articles, currentPage, totalPages }: ArticlesGridProps) {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [isPending, startTransition] = useTransition();
 
-    // Handle page changes smoothly with loading state
     const handlePageChange = (newPage: number) => {
+        const params = new URLSearchParams(searchParams.toString());
+        params.set('page', newPage.toString());
+
         startTransition(() => {
-            router.push(`/articles?page=${newPage}`);
+            router.push(`/articles?${params.toString()}`);
         });
     };
 
     return (
         <div className="space-y-10">
-            {/* Simple Loading Spinner */}
             {isPending ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
                     <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-                    <p className="text-sm font-medium">Loading articles...</p>
+                    <p className="text-sm font-medium">Updating articles...</p>
                 </div>
             ) : articles.length === 0 ? (
                 <div className="text-center py-20 text-muted-foreground">
-                    <p className="text-lg font-medium">No articles found.</p>
+                    <p className="text-lg font-medium">No articles found matching your criteria.</p>
                 </div>
             ) : (
-                /* Articles Grid */
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {articles.map((article) => (
                         <ArticleCard key={article.id} article={article} />
@@ -63,10 +64,11 @@ export default function ArticlesGrid({ articles, currentPage, totalPages }: Arti
                                 key={pageNumber}
                                 onClick={() => handlePageChange(pageNumber)}
                                 disabled={isPending}
-                                className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold transition-colors ${isActive
-                                    ? 'bg-blue-600 text-white dark:bg-blue-500'
-                                    : 'border border-blue-500/20 hover:bg-blue-500/10'
-                                    }`}
+                                className={`flex h-9 w-9 items-center justify-center rounded-lg text-sm font-semibold transition-colors ${
+                                    isActive
+                                        ? 'bg-blue-600 text-white dark:bg-blue-500'
+                                        : 'border border-blue-500/20 hover:bg-blue-500/10'
+                                }`}
                             >
                                 {pageNumber}
                             </button>
