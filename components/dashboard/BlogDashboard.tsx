@@ -4,10 +4,24 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import RecentArticles from "./RecentArticle";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
 
 export async function BlogDashboard() {
+
+    const { userId } = await auth();
+
+    // return early if no user is authenticated
+    if (!userId) {
+        return { articles: [], totalComments: 0 };
+    }
+
     const [articles, totalComments] = await Promise.all([
         prisma.article.findMany({
+            where: {
+                author: {
+                    clerkUserId: userId,
+                }
+            },
             orderBy: {
                 createdAt: "desc",
             },
@@ -25,7 +39,7 @@ export async function BlogDashboard() {
         prisma.comment.count(),
     ]);
 
-    
+
     return (
         <main className="flex-1 min-w-0 w-full p-4 sm:p-6 md:p-8">
             {/* Header Section */}
