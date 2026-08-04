@@ -5,15 +5,47 @@ import Link from "next/link";
 import RecentArticles from "./RecentArticle";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@clerk/nextjs/server";
+import { Lock, ArrowLeft } from 'lucide-react';
 
 export async function BlogDashboard() {
 
     const { userId } = await auth();
 
-    // return early if no user is authenticated
     if (!userId) {
-        return { articles: [], totalComments: 0 };
+        return (
+            <div className="flex min-h-[70vh] items-center justify-center px-4">
+                <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 text-center shadow-sm">
+                    {/* Icon */}
+                    <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                        <Lock className="h-6 w-6" />
+                    </div>
+
+                    {/* Text */}
+                    <h2 className="text-xl font-bold">Sign in required</h2>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                        Please log in to view and manage your dashboard.
+                    </p>
+
+                    {/* Buttons */}
+                    <div className="mt-6 flex flex-col gap-2">
+                        <Link
+                            href="/sign-in"
+                            className="w-full rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-700 transition-colors"
+                        >
+                            Sign In
+                        </Link>
+                        <Link
+                            href="/"
+                            className="inline-flex items-center justify-center gap-1 text-xs text-muted-foreground hover:text-foreground py-1 transition-colors"
+                        >
+                            <ArrowLeft className="h-3 w-3" /> Back to Home
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
     }
+
 
     const [articles, totalComments] = await Promise.all([
         prisma.article.findMany({
